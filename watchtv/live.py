@@ -1,60 +1,48 @@
 import requests
 import re
 import os
+
 # ========== 源配置 ==========
 SOURCE_CONFIG = [
     {
         "url": "http://adultiptv.net/chs.m3u",
-        "mode": "all",          # all：全部收下，统一分组
-        "out_group": "国外直播频道"
+        "mode": "all",
+        "out_group": "自用频道"
     },
     {
-        "url": "https://raw.githubusercontent.com/fafa002/yf2025/refs/heads/main/yiyifafa.txt",
-        "mode": "filter",       # filter：只保留匹配原始分组的频道
-        "src_group": "私密频道3_169169",# 源里面原始分组名字
-        "out_group": "移动三台" # 输出分组名，可以改名
+        "url": "填入湖南移动那个源地址",
+        "mode": "filter",
+        "src_group": "湖南移动",
+        "out_group": "湖南移动"
     }
 ]
 
 def parse_any(text: str):
+    """
+    返回 [(频道名, 播放链接, 所属分组), ...]
+    适配格式：分组,#genre#,xxx  + 频道名,url
+    """
     res = []
-    extinf_line = None
     current_group = None
     for raw_line in text.splitlines():
         ln = raw_line.strip()
         if not ln:
             continue
-        if ln.startswith("#EXTINF:"):
-            extinf_line = ln
+        # 分组标记行：xxx,#genre#,xxx
+        if ",#genre#," in ln:
+            parts = ln.split(',')
+            current_group = parts[0].strip()
             continue
-        if extinf_line is not None and not ln.startswith("#"):
-            res.append((extinf_line, ln, current_group))
-            extinf_line = None
+        # 跳过注释
+        if ln.startswith("#"):
             continue
-        if ',' in ln and not ln.startswith("#"):
-            sp = ln.split(',',1)
-            name_part = sp[0].strip()
-            url_part = sp[1].strip()
-            if url_part == "#genre#":
-                current_group = name_part
-                continue
-            if current_group:
-                fake_ext = f'#EXTINF:-1 group-title="{current_group}",{name_part}'
-            else:
-                fake_ext = f'#EXTINF:-1,{name_part}'
-            res.append((fake_ext, url_part, current_group))
+        # 频道行：频道名称,链接
+        if ',' in ln:
+            ch_name, play_url = ln.split(',', 1)
+            ch_name = ch_name.strip()
+            play_url = play_url.strip()
+            res.append((ch_name, play_url, current_group))
     return res
-
-def get_channel_name(extinf):
-    if "," in extinf:
-        return extinf.split(",")[-1].strip()
-    return ""
-
-def get_group_title(extinf):
-    m = re.search(r'group-title="([^"]+)"', extinf)
-    if m:
-        return m.group(1).strip()
-    return ""
 
 def main():
     all_out = []
@@ -64,22 +52,21 @@ def main():
         try:
             resp = requests.get(url, timeout=15)
             resp.raise_for_status()
-            channels = parse_any(resp.text)
-            for extinf, play_url, src_g in channels:
-                ch_name = get_channel_name(extinf)
+            channel_list = parse_any(resp.text)
+            for ch_name, play_url, src_g in channel_list:
                 item_key = (ch_name, play_url)
                 if item_key in seen:
                     continue
-                # 模式1：全部采集，强制统一分组
+
                 if cfg["mode"] == "all":
+                    # 全部收下，强制改成指定分组
                     seen.add(item_key)
-                    all_out.append( (cfg["out_group"], ch_name, play_url) )
-                # 模式2：只保留源分组等于指定名字的
+                    all_out.append((cfg["out_group"], ch_name, play_url))
                 elif cfg["mode"] == "filter":
-                    real_g = get_group_title(extinf)
-                    if real_g == cfg["src_group"] or src_g == cfg["src_group"]:
+                    # 只保留所属分组等于目标分组的
+                    if src_g == cfg["src_group"]:
                         seen.add(item_key)
-                        all_out.append( (cfg["out_group"], ch_name, play_url) )
+                        all_out.append((cfg["out_group"], ch_name, play_url))
         except Exception as e:
             print(f"⚠️ 拉取 {url} 失败：{e}")
 
@@ -98,3 +85,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
