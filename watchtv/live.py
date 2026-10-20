@@ -11,7 +11,7 @@ SOURCE_CONFIG = [
     {
         "url": "https://raw.githubusercontent.com/fafa002/yf2025/refs/heads/main/yiyifafa.txt",
         "mode": "filter",       # filter：只保留匹配原始分组的频道
-        "src_group": "私密频道3",# 源里面原始分组名字
+        "src_group": "私密频道3_169169",# 源里面原始分组名字
         "out_group": "移动三台" # 输出分组名，可以改名
     }
 ]
