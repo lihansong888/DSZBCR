@@ -3,12 +3,13 @@ import re
 import os
 # ========== 填写源的地址 ==========
 URL_LIST = [
-    "https://raw.githubusercontent.com/lihansong888/IPTV/refs/heads/Files/Adult.m3u"
-    
+    #"https://raw.githubusercontent.com/lihansong888/IPTV/refs/heads/Files/Adult.m3u"
+    "http://adultiptv.net/chs.m3u"
 ]
 # ========== 分组映射：左边是源里的分组名，右边是输出时改后的分组名 ==========
 GROUP_MAP = {
-    "成人频道": "成人频道",    
+    "未分组": "成人频道",
+    "XXX": "成人频道", 
 
 }
 # ========== 说明：原存活检测已停用 ==========
