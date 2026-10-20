@@ -10,10 +10,10 @@ SOURCE_CONFIG = [
         "out_group": "自用频道"
     },
     {
-        "url": "填入湖南移动那个源地址",
+        "url": "https://raw.githubusercontent.com/fafa002/yf2025/refs/heads/main/yiyifafa.txt",
         "mode": "filter",
-        "src_group": "湖南移动",
-        "out_group": "湖南移动"
+        "src_group": "私密频道3",   # 精确匹配这个分组名
+        "out_group": "湖南移动3"    # 输出分组名字，你也可以改成别的
     }
 ]
 
@@ -63,7 +63,7 @@ def main():
                     seen.add(item_key)
                     all_out.append((cfg["out_group"], ch_name, play_url))
                 elif cfg["mode"] == "filter":
-                    # 只保留所属分组等于目标分组的
+                    # 精确相等，只拿湖南移动3
                     if src_g == cfg["src_group"]:
                         seen.add(item_key)
                         all_out.append((cfg["out_group"], ch_name, play_url))
@@ -85,4 +85,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
