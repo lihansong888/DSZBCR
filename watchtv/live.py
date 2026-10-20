@@ -3,13 +3,13 @@ import re
 import os
 # ========== 填写源的地址 ==========
 URL_LIST = [
-    "https://sub.ottiptv.cc/douyuyqk.m3u"
+    "https://raw.githubusercontent.com/lihansong888/IPTV/refs/heads/Files/Adult.m3u"
     
 ]
 # ========== 分组映射：左边是源里的分组名，右边是输出时改后的分组名 ==========
 GROUP_MAP = {
-    "原创IP": "hansong斗鱼原创",    
-"一起看": "hansong斗鱼一起看",
+    "成人频道": "成人频道",    
+
 }
 # ========== 说明：原存活检测已停用 ==========
 # GitHub Actions 服务器在美国，访问国内直播源超时/抖动严重，
