@@ -7,13 +7,13 @@ SOURCE_CONFIG = [
     {
         "url": "http://adultiptv.net/chs.m3u",
         "mode": "all",
-        "out_group": "自用频道"
+        "out_group": "欧美直播频道"
     },
     {
         "url": "https://raw.githubusercontent.com/fafa002/yf2025/refs/heads/main/yiyifafa.txt",
         "mode": "filter",
         "src_group": "私密频道3_169169",
-        "out_group": "湖南移动3"
+        "out_group": "欧美频道2"
     }
 ]
 
@@ -25,19 +25,25 @@ def parse_any(text: str):
         ln = raw_line.strip()
         if not ln:
             continue
-        # 识别 xxx,#genre#,xxx 分组标记行
+        # 分组标记行：xxx,#genre#,xxx
         if ",#genre#," in ln:
             parts = ln.split(',')
             current_group = parts[0].strip()
             all_group_names.add(current_group)
             continue
+        # 跳过注释行
         if ln.startswith("#"):
             continue
-        # 频道行：频道名,播放链接
+        # 情况A：频道名,链接
         if ',' in ln:
             ch_name, play_url = ln.split(',', 1)
             ch_name = ch_name.strip()
             play_url = play_url.strip()
+            res.append((ch_name, play_url, current_group))
+        # 情况B：只有播放链接，没有频道名（适配第一个源）
+        else:
+            ch_name = ln
+            play_url = ln
             res.append((ch_name, play_url, current_group))
     print(f"【该源识别到全部分组】：{sorted(all_group_names)}")
     return res
@@ -61,7 +67,6 @@ def main():
                     seen.add(item_key)
                     all_out.append((cfg["out_group"], ch_name, play_url))
                 elif cfg["mode"] == "filter":
-                    # 完整名称精确匹配
                     if src_g == cfg["src_group"]:
                         print(f"✅命中频道：{ch_name}")
                         seen.add(item_key)
