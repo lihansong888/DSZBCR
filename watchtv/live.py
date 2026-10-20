@@ -12,36 +12,34 @@ SOURCE_CONFIG = [
     {
         "url": "https://raw.githubusercontent.com/fafa002/yf2025/refs/heads/main/yiyifafa.txt",
         "mode": "filter",
-        "src_group": "私密频道3",   # 精确匹配这个分组名
-        "out_group": "湖南移动3"    # 输出分组名字，你也可以改成别的
+        "src_group": "私密频道3_169169",
+        "out_group": "湖南移动3"
     }
 ]
 
 def parse_any(text: str):
-    """
-    返回 [(频道名, 播放链接, 所属分组), ...]
-    适配格式：分组,#genre#,xxx  + 频道名,url
-    """
     res = []
     current_group = None
+    all_group_names = set()
     for raw_line in text.splitlines():
         ln = raw_line.strip()
         if not ln:
             continue
-        # 分组标记行：xxx,#genre#,xxx
+        # 识别 xxx,#genre#,xxx 分组标记行
         if ",#genre#," in ln:
             parts = ln.split(',')
             current_group = parts[0].strip()
+            all_group_names.add(current_group)
             continue
-        # 跳过注释
         if ln.startswith("#"):
             continue
-        # 频道行：频道名称,链接
+        # 频道行：频道名,播放链接
         if ',' in ln:
             ch_name, play_url = ln.split(',', 1)
             ch_name = ch_name.strip()
             play_url = play_url.strip()
             res.append((ch_name, play_url, current_group))
+    print(f"【该源识别到全部分组】：{sorted(all_group_names)}")
     return res
 
 def main():
@@ -49,6 +47,7 @@ def main():
     seen = set()
     for cfg in SOURCE_CONFIG:
         url = cfg["url"]
+        print(f"\n------正在拉取：{url}------")
         try:
             resp = requests.get(url, timeout=15)
             resp.raise_for_status()
@@ -59,18 +58,18 @@ def main():
                     continue
 
                 if cfg["mode"] == "all":
-                    # 全部收下，强制改成指定分组
                     seen.add(item_key)
                     all_out.append((cfg["out_group"], ch_name, play_url))
                 elif cfg["mode"] == "filter":
-                    # 精确相等，只拿湖南移动3
+                    # 完整名称精确匹配
                     if src_g == cfg["src_group"]:
+                        print(f"✅命中频道：{ch_name}")
                         seen.add(item_key)
                         all_out.append((cfg["out_group"], ch_name, play_url))
         except Exception as e:
-            print(f"⚠️ 拉取 {url} 失败：{e}")
+            print(f"⚠️ 拉取失败：{e}")
 
-    print(f"✅采集完成，总共 {len(all_out)} 个频道")
+    print(f"\n✅采集完成，总共 {len(all_out)} 个频道")
     out_dir = os.path.dirname(os.path.abspath(__file__))
     output_m3u = ["#EXTM3U"]
     for gname, cname, curl in all_out:
